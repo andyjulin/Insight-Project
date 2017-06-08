@@ -40,6 +40,8 @@ def set_factorize(df, in_name, out_name = '', show = False):
     if show:
         print df[in_name].value_counts()
 
+    return cols
+
 
 def get_base_switrs_df(query = None):
     if not query:

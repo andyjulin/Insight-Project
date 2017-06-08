@@ -3,6 +3,7 @@ import urllib2
 import pandas as pd
 import numpy as np
 
+
 # County codes not listed on Wikipedia pages
 counties = {
 'Nevada County, California': u'NEV',
@@ -68,6 +69,15 @@ for r in roads:
     c = r.split('-')
     road_codes[int(c[1])] = r
 
+highways = {}
+
+
+def get_roads():
+    return roads
+
+
+def get_road_codes():
+    return road_codes
 
 
 class Highway:   
@@ -186,14 +196,15 @@ class Highway:
                     self.exits[exit] = [county, postmile, location]
 
 
-highways = {}
-
-for r in roads:
-    highways[r] = Highway(r)
-
+def load_highways():
+    if highways == {}:
+        for r in roads:
+            highways[r] = Highway(r)
 
 
 def get_exit(highway, road):
+    load_highways()
+
     d = highways[highway].exits
     for e in sorted(d):
         if road in d[e][2]:
@@ -202,7 +213,9 @@ def get_exit(highway, road):
     return 0
 
 
-def get_last_exit(d):#highway, county, postmile):
+def get_last_exit(d):
+    load_highways()
+
     if int(d[0]) not in road_codes:
         return 0
     
@@ -242,3 +255,4 @@ def get_last_exit(d):#highway, county, postmile):
 #         print '%4s - %3s - %6s - %s' % (e, data.exits[e][0], data.exits[e][1], data.exits[e][2])
         
     return exit 
+
