@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+        <meta charset="utf-8">
+        <title>Route Accident Analyer</title>
+        <style>
+            /* Always set the map height explicitly to define the size of 
+               the div element that contains the map. */
+            #map {
+                height: 40em;
+                width: 40em;
+            }
+            /* Optional: Makes the sample page fill the window. */
+            html, body {
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            #floating-panel {
+                position: absolute;
+                top: 10px;
+                left: 25%;
+                z-index: 5;
+                background-color: #fff;
+                padding: 5px;
+                border: 1px solid #999;
+                text-align: center;
+                font-family: 'Roboto','sans-serif';
+                line-height: 30px;
+                padding-left: 10px;
+            }
+        </style>
+    </head>
+
+    <body onLoad="drawPoints(highway_points)">
+        <div>
+            <form action="/map" method="GET">
+                <label for="start_location">Start Location:</label>
+                <input type="text" id="start_loc" name='start_loc' placeholder="Enter location">
+
+                <br>
+
+                <label for="end_location">End Location:</label>
+                <input type="text" id="end_loc" name='end_loc' placeholder="Enter location">
+
+                <br>
+
+                <input type="submit" value="Calculate" />
+            </form>
+        </div>
+        <div>
+            <div id="map"></div>
+
+            {% for r in road_list %}
+            <br>{{ r }}
+            {% endfor %}
+            <br><br><br>
+            {% for d in dir_list %}
+            <br>{{ d }}
+            {% endfor %}
+        </div>
+    <script>
+        // Set loaded map to global var
+        var map;
+
+        // Must render points after Flask is done doing its thing
+        var highway_points = {
+            {% for p in points %}
+            {{ p[0] }}: {
+                center: {lat: {{ p[1] }}, lng: {{ p[2] }}},
+                color: '{{ p[3] }}'
+            },
+            {% endfor %}
+        };
+
+
+        function initMap() {
+            var directionsService = new google.maps.DirectionsService;
+            var directionsDisplay = new google.maps.DirectionsRenderer;
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 6,
+                center: {lat: 37.47, lng: -119.25}
+            });
+            directionsDisplay.setMap(map);
+
+            var params = {
+                origin: "{{ start_loc }}",
+                destination: "{{ end_loc }}",
+                travelMode: 'DRIVING'
+            };
+
+            directionsService.route(params,
+                function(response, status) {
+                if (status === 'OK') {
+                  directionsDisplay.setDirections(response);
+                }
+                else {
+                    window.alert('Directions request failed due to ' + status);
+                }
+            });
+
+            return map;
+        }
+
+        function drawPoints(points) {
+            // Construct the circle for each value in citymap.
+            // Note: We scale the area of the circle based on the population.
+            for (var point in points) {
+                // Add the circle for this city to the map.
+                var cityCircle = new google.maps.Circle({
+                    strokeColor: points[point].color,
+                    strokeOpacity: 0.8,
+                    strokeWeight: 2,
+                    fillColor: points[point].color,
+                    fillOpacity: 0.35,
+                    map: map,
+                    center: points[point].center,
+                    radius: 2500
+                });
+            }
+
+        }
+    </script>
+    <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key={{ api_key }}&callback=initMap">
+    </script>
+  </body>
+</html>

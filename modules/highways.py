@@ -3,6 +3,8 @@ import urllib2
 import pandas as pd
 import numpy as np
 
+import pickle
+
 
 # County codes not listed on Wikipedia pages
 counties = {
@@ -62,7 +64,12 @@ bad_roads = [
     'I-8',  'I-580', 
 ]
 
-roads = i_roads + us_roads + ca_roads# + bad_roads
+other_roads = [
+    'I-380', 'CA-17'
+]
+
+good_roads = i_roads + us_roads + ca_roads
+roads = good_roads + bad_roads + other_roads
 
 road_codes = {}
 for r in roads:
@@ -78,6 +85,14 @@ def get_roads():
 
 def get_road_codes():
     return road_codes
+
+def get_highways():
+    load_highways()
+
+    return highways
+
+
+
 
 
 class Highway:   
@@ -197,9 +212,33 @@ class Highway:
 
 
 def load_highways():
-    if highways == {}:
+    if not highways == {}:
+        return
+
+    if False:
         for r in roads:
+            highways[r] = None
+
+        for r in good_roads:
             highways[r] = Highway(r)
+
+        for r in roads:
+            save_obj(highways[r], r)
+
+    else:
+        for r in roads:
+            highways[r] = load_obj(r)
+
+
+def save_obj(obj, name):
+    with open('../data/highways/'+ name + '.pkl', 'wb') as f:
+        pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+
+def load_obj(name ):
+    with open('../data/highways/' + name + '.pkl', 'rb') as f:
+        return pickle.load(f)
+
+
 
 
 def get_exit(highway, road):
@@ -224,6 +263,8 @@ def get_last_exit(d):
     postmile = d[2]
 
     data = highways[highway]    
+    if data is None:
+        return 0
     
     c = postmile[0] if postmile[0].isalpha() else ' '    
     f = float(postmile[1:]) if c != ' ' else float(postmile)
